@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enwis — Zamonaviy baholash platformasi</title>
+<meta name="description" content="Enwis — universitetlar, maktablar va o'quv markazlari uchun sun'iy intellekt yordamida imtihon yaratish, o'tkazish va tahlil qilish platformasi.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* ===== Design tokens ===== */
+  :root{
+    --bg:#FFFFFF;
+    --dark:#18332F;
+    --dark-2:#0F211E;
+    --accent:#A8F62D;
+    --accent-2:#C4FF4D;
+    --ink:#0F172A;
+    --gray:#5B6B78;          /* darkened from #64748B for AA contrast on white */
+    --gray-on-dark:#C7D6D1;  /* lightened for AA contrast on --dark */
+    --gray-on-dark-mute:#93A6A1; /* only for large/bold text on dark, never body copy */
+    --line:#E7ECE9;
+    --border-dark:var(--border-dark); /* brand token: borders/subtle fills on dark surfaces */
+    --danger:#DC2626;        /* reserved ONLY for genuine security/alert states */
+
+    /* spacing scale (4px base) */
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+    --sp-7:48px; --sp-8:64px; --sp-9:96px; --sp-10:128px;
+
+    /* type scale */
+    --fs-caption:12px; --fs-small:13px; --fs-body:15px; --fs-body-lg:16px;
+    --fs-h4:18px; --fs-h3:22px; --fs-h2:clamp(1.9rem,4vw,2.8rem); --fs-h1:clamp(2.4rem,6vw,4.6rem);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif; font-size:var(--fs-body); line-height:1.6;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif; letter-spacing:-0.02em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .container-x{max-width:1240px; margin:0 auto; padding-left:var(--sp-5); padding-right:var(--sp-5);}
+  ::selection{background:var(--accent); color:var(--dark);}
+
+  /* ===== Accessibility: focus & skip link ===== */
+  .skip-link{
+    position:absolute; left:12px; top:-60px; z-index:100; background:var(--dark); color:#fff;
+    padding:12px 20px; border-radius:8px; font-weight:600; font-size:14px; transition:top .2s;
+  }
+  .skip-link:focus{top:12px;}
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--dark); outline-offset:3px; border-radius:6px;
+  }
+  .on-dark:focus-visible{outline-color:var(--accent);}
+
+  /* ===== Reveal (JS adds .in; respects reduced motion) ===== */
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1);}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  .reveal-d1{transition-delay:.08s;} .reveal-d2{transition-delay:.16s;}
+  .reveal-d3{transition-delay:.24s;} .reveal-d4{transition-delay:.32s;}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1 !important; transform:none !important; transition:none !important;}
+    .scan-line, .float-slow, .float-slow-2, .eyebrow .dot{animation:none !important;}
+  }
+
+  .nav-blur{backdrop-filter: blur(14px) saturate(160%); background:rgba(255,255,255,.72); border-bottom:1px solid var(--line);}
+
+  .btn-primary{
+    background:var(--dark); color:#fff; border-radius:999px; padding:13px 26px;
+    font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .35s cubic-bezier(.16,1,.3,1), color .35s; position:relative; overflow:hidden; border:none; cursor:pointer;
+  }
+  .btn-primary:hover, .btn-primary:focus-visible{transform:translateY(-2px);}
+  .btn-primary::after{content:''; position:absolute; inset:0; background:var(--accent); opacity:0; transition:opacity .35s; z-index:1;}
+  .btn-primary span, .btn-primary svg{position:relative; z-index:2;}
+  .btn-primary:hover::after, .btn-primary:focus-visible::after{opacity:1;}
+  .btn-primary:hover, .btn-primary:focus-visible{color:var(--dark);}
+
+  .btn-ghost{
+    border:1px solid var(--line); border-radius:999px; padding:13px 26px; font-weight:600; font-size:14px;
+    color:var(--ink); background:#fff; transition:border-color .3s, background .3s; cursor:pointer;
+  }
+  .btn-ghost:hover, .btn-ghost:focus-visible{border-color:var(--dark); background:#F7FAF6;}
+
+  .hero-grid{
+    position:absolute; inset:0;
+    background-image:linear-gradient(rgba(17,24,39,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,.04) 1px, transparent 1px);
+    background-size:56px 56px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 40%, transparent 90%);
+  }
+  .glow{position:absolute; width:640px; height:640px; border-radius:50%; background:radial-gradient(circle, rgba(168,246,45,.35), transparent 65%); filter:blur(10px); pointer-events:none; will-change:transform;}
+
+  .scan-card{position:relative; background:#fff; border:1px solid var(--line); border-radius:20px; box-shadow:0 20px 60px -20px rgba(24,51,47,.25); overflow:hidden;}
+  .scan-line{
+    position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent-2) 50%, var(--accent) 70%, transparent);
+    box-shadow:0 0 18px 2px rgba(168,246,45,.7);
+    animation:scanmove 3.2s ease-in-out infinite; animation-play-state:paused;
+  }
+  .scan-card.visible .scan-line{animation-play-state:running;}
+  @keyframes scanmove{0%{top:8%;opacity:0;}8%{opacity:1;}50%{top:92%;opacity:1;}58%{opacity:0;}100%{top:92%;opacity:0;}}
+
+  .float-slow, .float-slow-2{animation-play-state:paused;}
+  .in-view .float-slow{animation:floaty 6s ease-in-out infinite; animation-play-state:running;}
+  .in-view .float-slow-2{animation:floaty 7.5s ease-in-out infinite; animation-delay:.6s; animation-play-state:running;}
+  @keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--r,0deg));}50%{transform:translateY(-14px) rotate(var(--r,0deg));}}
+
+  .eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:var(--fs-caption); font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--dark); background:#F2F5F2; border:1px solid var(--line); padding:6px 14px; border-radius:999px;}
+  .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--dark); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .problem-card{border:1px solid var(--line); border-radius:18px; padding:var(--sp-5); background:#fff; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s;}
+  .problem-card:hover{transform:translateY(-6px); box-shadow:0 24px 50px -24px rgba(17,24,39,.18);}
+  .icon-badge{width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:#F0F4F1; flex-shrink:0;}
+  .icon-badge.danger{background:#FEF2F2;}
+
+  .timeline{display:flex; flex-direction:column; gap:var(--sp-5);}
+  @media (min-width:1024px){.timeline{flex-direction:row; align-items:flex-start; gap:var(--sp-4); position:relative;}
+    .timeline::before{content:''; position:absolute; top:23px; left:24px; right:24px; height:2px; background:repeating-linear-gradient(to right, var(--line) 0 6px, transparent 6px 12px); z-index:0;}}
+  .tl-node{width:48px; height:48px; border-radius:50%; background:var(--dark); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Space Grotesk'; position:relative; z-index:1; flex-shrink:0;}
+
+  .bento{border:1px solid var(--line); border-radius:22px; background:#fff; position:relative; overflow:hidden;}
+  .bento-dark{background:var(--dark); color:#fff; border-color:var(--dark);}
+  .bento::before{content:''; position:absolute; inset:0; opacity:0; transition:opacity .4s; background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%), rgba(168,246,45,.15), transparent 60%); pointer-events:none;}
+  .bento:hover::before{opacity:1;}
+  .tag{font-size:11px; font-weight:600; padding:4px 10px; border-radius:999px; background:#F1F5F1; color:var(--gray);}
+  .stat-num{font-family:'Space Grotesk'; font-weight:700; font-size:clamp(2.2rem,5vw,3.4rem); letter-spacing:-0.03em;}
+  .quote-card{border:1px solid var(--line); border-radius:20px; padding:var(--sp-6); background:#fff;}
+
+  .price-card{border:1px solid var(--line); border-radius:24px; padding:var(--sp-6); background:#fff; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s;}
+  .price-card.highlight{background:var(--dark); color:#fff; border-color:var(--dark);}
+  .price-card:hover{transform:translateY(-6px);}
+  .check{width:18px; height:18px; border-radius:50%; background:var(--dark); flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .check-accent{background:var(--accent);}
+  .price-card.highlight .check{background:rgba(255,255,255,.15);}
+
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{width:100%; text-align:left; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:24px 0; font-weight:600; font-size:var(--fs-h4); background:none; border:none; color:var(--ink); font-family:inherit;}
+  .faq-a{max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.16,1,.3,1), padding .4s;}
+  .faq-item[data-open="true"] .faq-a{max-height:240px; padding-bottom:24px;}
+  .faq-icon{transition:transform .4s; flex-shrink:0;}
+  .faq-item[data-open="true"] .faq-icon{transform:rotate(45deg);}
+
+  #mobileMenu{max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(.16,1,.3,1);}
+  #mobileMenu[data-open="true"]{max-height:400px;}
+  ::-webkit-scrollbar{width:10px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:10px;}
+
+  /* ===== Interactive demo ===== */
+  .demo-tab{padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--line); background:#fff; color:var(--gray); cursor:pointer; white-space:nowrap; transition:background .3s,color .3s,border-color .3s; font-family:inherit;}
+  .demo-tab[aria-selected="true"]{background:var(--dark); color:#fff; border-color:var(--dark);}
+  .demo-panel{display:none;}
+  .demo-panel.active{display:block;}
+  .demo-step-visual{border:1px solid var(--line); border-radius:18px; padding:28px; background:#FBFDFA; min-height:220px;}
+
+  /* ===== Dashboard showcase ===== */
+  .dash-sidebar-item{display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px; font-size:13px; color:var(--gray-on-dark); transition:background .2s,color .2s;}
+  .dash-sidebar-item.active{background:var(--border-dark); color:#fff;}
+  .dash-stat-card{background:var(--dark-2); border:1px solid var(--border-dark); border-radius:16px; padding:20px;}
+  .dash-table th{text-align:left; font-weight:500; color:var(--gray-on-dark); font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding-bottom:10px;}
+  .dash-table td{padding:12px 0; border-top:1px solid var(--border-dark); font-size:13px;}
+  .status-pill{font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px;}
+
+  /* ===== Phone mockup ===== */
+  .phone-frame{width:270px; margin:0 auto; border-radius:40px; background:var(--dark); padding:12px; box-shadow:0 30px 70px -24px rgba(24,51,47,.4); position:relative;}
+  .phone-screen{background:#fff; border-radius:30px; overflow:hidden; position:relative; min-height:500px; display:flex; flex-direction:column;}
+  .phone-notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:76px; height:16px; background:var(--dark); border-radius:0 0 12px 12px; z-index:2;}
+  .option-row{border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.5px; display:flex; align-items:center; gap:8px; transition:border-color .2s,background .2s;}
+  .option-row.selected{border-color:var(--dark); background:#F7FAF6; font-weight:600;}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Asosiy kontentga o'tish</a>
+
+<header class="fixed top-0 left-0 right-0 z-50 nav-blur">
+  <div class="container-x flex items-center justify-between h-[72px]">
+    <a href="/" class="flex items-center gap-2" aria-label="Enwis — bosh sahifa">
+      <svg width="30" height="30" viewBox="0 0 512 512" fill="none" aria-hidden="true">
+        <rect x="150" y="60" width="220" height="90" rx="45" fill="#A8F62D"/>
+        <rect x="150" y="211" width="150" height="90" rx="45" fill="#A8F62D"/>
+        <rect x="150" y="362" width="220" height="90" rx="45" fill="#A8F62D"/>
+      </svg>
+      <span class="display font-bold text-xl" style="color:var(--dark)">enwis</span>
+    </a>
+    <nav class="hidden lg:flex items-center gap-8 text-[14px] font-medium" aria-label="Asosiy navigatsiya">
+      <a href="#imkoniyatlar" class="hover:opacity-60 transition">Imkoniyatlar</a>
+      <a href="#demo" class="hover:opacity-60 transition">Demo</a>
+      <a href="#tariflar" class="hover:opacity-60 transition">Tariflar</a>
+      <a href="#savollar" class="hover:opacity-60 transition">Savollar</a>
+      <a href="/blog" class="hover:opacity-60 transition">Blog</a>
+    </nav>
+    <div class="hidden lg:flex items-center gap-3">
+      <a href="/login" class="text-[14px] font-semibold px-4 py-2" style="color:var(--ink)">Kirish</a>
+      <a href="/register" class="btn-primary"><span>Bepul boshlash</span></a>
+    </div>
+    <button id="menuBtn" class="lg:hidden w-9 h-9 flex flex-col justify-center items-center gap-[5px]" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menyuni ochish">
+      <span class="w-6 h-[2px] bg-current" aria-hidden="true"></span>
+      <span class="w-6 h-[2px] bg-current" aria-hidden="true"></span>
+    </button>
+  </div>
+  <div id="mobileMenu" class="lg:hidden" data-open="false">
+    <nav class="container-x flex flex-col gap-1 pb-6 text-[15px] font-medium" aria-label="Mobil navigatsiya">
+      <a href="#imkoniyatlar" class="py-3 border-b" style="border-color:var(--line)">Imkoniyatlar</a>
+      <a href="#demo" class="py-3 border-b" style="border-color:var(--line)">Demo</a>
+      <a href="#yechim" class="py-3 border-b" style="border-color:var(--line)">Qanday ishlaydi</a>
+      <a href="#tariflar" class="py-3 border-b" style="border-color:var(--line)">Tariflar</a>
+      <a href="#savollar" class="py-3 border-b" style="border-color:var(--line)">Savollar</a>
+      <a href="/register" class="btn-primary justify-center mt-4"><span>Bepul boshlash</span></a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<!-- HERO -->
+<section class="relative pt-[160px] pb-[100px] overflow-hidden" aria-labelledby="hero-heading">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="glow" id="heroGlow" style="top:-120px; left:50%; transform:translateX(-50%);" aria-hidden="true"></div>
+  <div class="container-x relative">
+    <div class="max-w-[880px] mx-auto text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Imtihon platformasi, AI bilan kuchaytirilgan</span>
+      <h1 id="hero-heading" class="mt-7 font-bold leading-[1.03]" style="color:var(--dark); font-size:var(--fs-h1)">
+        Imtihonlarni yarating, <br class="hidden sm:block"> boshqaring va o'tkazing — <span style="color:var(--ink); text-decoration:underline; text-decoration-color:var(--accent); text-decoration-thickness:6px; text-underline-offset:4px;">bitta platformada</span>
+      </h1>
+      <p class="mt-7 leading-relaxed max-w-[620px] mx-auto" style="color:var(--gray); font-size:var(--fs-body-lg)">
+        Enwis universitetlar, maktablar va o'quv markazlariga sun'iy intellekt yoki mavjud savollar banki asosida imtihon tuzish, xavfsiz onlayn test o'tkazish, avtomatik baholash va natijalarni tahlil qilish imkonini beradi.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/register" class="btn-primary"><span>Bepul boshlash</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="/demo" class="btn-ghost">Demo so'rash</a>
+      </div>
+      <p class="mt-5 text-[13px]" style="color:var(--gray)">Kredit karta talab qilinmaydi &middot; 14 kun bepul sinov</p>
+    </div>
+
+    <div class="mt-20 relative reveal reveal-d2 in" id="heroVisual">
+      <div class="max-w-[980px] mx-auto scan-card" role="img" aria-label="Enwis boshqaruv panelining namunasi: matematika imtihoni, 87 foiz o'rtacha ball">
+        <div class="scan-line" aria-hidden="true"></div>
+        <div class="flex items-center gap-2 px-6 py-4 border-b" style="border-color:var(--line)">
+          <span class="w-3 h-3 rounded-full" style="background:#FF5F57" aria-hidden="true"></span>
+          <span class="w-3 h-3 rounded-full" style="background:#FEBC2E" aria-hidden="true"></span>
+          <span class="w-3 h-3 rounded-full" style="background:#28C840" aria-hidden="true"></span>
+          <span class="ml-4 mono text-[12px]" style="color:var(--gray)">enwis.uz/dashboard/imtihon/matematika-2</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
+          <div class="lg:col-span-2 p-8 border-r" style="border-color:var(--line)">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <div class="tag mb-2 inline-block">Matematika &middot; 24-savol</div>
+                <h3 class="font-semibold" style="font-size:var(--fs-h4)">Kvadrat tenglamalar bo'limi</h3>
+              </div>
+              <div class="mono text-[13px] px-3 py-1.5 rounded-full" style="background:var(--dark); color:var(--accent)">18:42</div>
+            </div>
+            <div class="space-y-3">
+              <div class="p-4 rounded-xl" style="background:#F7FAF6; border:1px solid var(--line)">
+                <p class="text-[14px] font-medium mb-3">x² − 7x + 12 = 0 tenglamaning ildizlarini toping</p>
+                <div class="grid grid-cols-2 gap-2 text-[13px]">
+                  <div class="px-3 py-2 rounded-lg border flex items-center gap-2" style="border-color:var(--accent); background:#EFFCDB;">
+                    <span class="check check-accent" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    x=3, x=4
+                  </div>
+                  <div class="px-3 py-2 rounded-lg border" style="border-color:var(--line)">x=2, x=6</div>
+                  <div class="px-3 py-2 rounded-lg border" style="border-color:var(--line)">x=−3, x=−4</div>
+                  <div class="px-3 py-2 rounded-lg border" style="border-color:var(--line)">x=1, x=12</div>
+                </div>
+              </div>
+              <div class="flex gap-2" role="img" aria-label="24 ta savoldan 3 tasi javob berildi">
+                <div class="h-2 flex-1 rounded-full" style="background:var(--dark)"></div>
+                <div class="h-2 flex-1 rounded-full" style="background:var(--dark)"></div>
+                <div class="h-2 flex-1 rounded-full" style="background:var(--dark)"></div>
+                <div class="h-2 flex-1 rounded-full" style="background:var(--line)"></div>
+                <div class="h-2 flex-1 rounded-full" style="background:var(--line)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="p-8" style="background:#FBFDFA">
+            <p class="text-[12px] font-semibold uppercase tracking-wide mb-4" style="color:var(--gray)">Jonli natija</p>
+            <div class="stat-num" style="color:var(--dark)">87<span class="text-[20px]">%</span></div>
+            <p class="text-[13px]" style="color:var(--gray)">o'rtacha ball, 214 talaba</p>
+            <div class="mt-6 flex items-end gap-1.5 h-[80px]" aria-hidden="true">
+              <div class="flex-1 rounded-t" style="height:40%; background:var(--line)"></div>
+              <div class="flex-1 rounded-t" style="height:65%; background:var(--line)"></div>
+              <div class="flex-1 rounded-t" style="height:50%; background:var(--line)"></div>
+              <div class="flex-1 rounded-t" style="height:90%; background:var(--accent)"></div>
+              <div class="flex-1 rounded-t" style="height:75%; background:var(--line)"></div>
+              <div class="flex-1 rounded-t" style="height:60%; background:var(--line)"></div>
+            </div>
+            <div class="mt-6 pt-6 border-t" style="border-color:var(--line)">
+              <p class="text-[13px] font-medium">Avtomatik baholandi</p>
+              <p class="text-[12px]" style="color:var(--gray)">0.4 soniyada &middot; insho tekshiruvi kutilmoqda</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hidden md:flex absolute -left-6 top-16 float-slow items-center gap-2 bg-white border rounded-xl px-4 py-3 shadow-xl" style="border-color:var(--line); --r:-3deg;" aria-hidden="true">
+        <span class="check check-accent"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <span class="text-[13px] font-medium">AI 40 ta savol yaratdi</span>
+      </div>
+      <div class="hidden md:flex absolute -right-6 bottom-20 float-slow-2 items-center gap-2 bg-white border rounded-xl px-4 py-3 shadow-xl" style="border-color:var(--line); --r:3deg;" aria-hidden="true">
+        <span class="w-2 h-2 rounded-full" style="background:var(--danger)"></span>
+        <span class="text-[13px] font-medium">Ekrandan chetga chiqish aniqlandi</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-16 border-y" style="border-color:var(--line)" aria-labelledby="trusted-heading">
+  <div class="container-x">
+    <p id="trusted-heading" class="text-center text-[13px] font-semibold uppercase tracking-wide mb-10 reveal in" style="color:var(--gray)">Universitetlar, maktablar va sertifikatlash markazlari ishonadi</p>
+    <div class="flex flex-wrap justify-center items-center gap-x-14 gap-y-6 reveal reveal-d1 in" style="color:var(--gray)">
+      <span class="display font-bold text-[20px] opacity-60">Milliy Universitet</span>
+      <span class="display font-bold text-[20px] opacity-60">TashkentEdu</span>
+      <span class="display font-bold text-[20px] opacity-60">IT Akademiya</span>
+      <span class="display font-bold text-[20px] opacity-60">Sertifikat.uz</span>
+      <span class="display font-bold text-[20px] opacity-60">O'quv Markaz+</span>
+    </div>
+  </div>
+</section>
+
+<section class="py-28" aria-labelledby="problem-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Muammo</span>
+      <h2 id="problem-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">An'anaviy imtihonlar vaqt va resurslarni yeb qo'yadi</h2>
+    </div>
+    <div class="mt-14 grid md:grid-cols-3 gap-5">
+      <div class="problem-card reveal in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Qo'lda savol tuzish</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">O'qituvchilar har bir imtihon uchun soatlab vaqt sarflab, savollarni qayta-qayta yozadi.</p>
+      </div>
+      <div class="problem-card reveal reveal-d1 in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Qog'ozli testlar</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Chop etish, tarqatish va saqlash xarajatlari, logistik muammolar bilan birga keladi.</p>
+      </div>
+      <div class="problem-card reveal reveal-d2 in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M12 8v4l3 3M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Qo'lda baholash</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Yuzlab javob varaqlarini tekshirish kunlab davom etadi, xatolik ehtimoli yuqori.</p>
+      </div>
+      <div class="problem-card reveal in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Savollar sizib chiqishi</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Bir marta ishlatilgan savollar tarqalib, imtihon adolatliligiga putur yetkazadi.</p>
+      </div>
+      <div class="problem-card reveal reveal-d1 in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Tahlil yo'qligi</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Qaysi mavzu qiyin kechganini, qayerda bo'shliq borligini bilish imkonsiz.</p>
+      </div>
+      <div class="problem-card reveal reveal-d2 in">
+        <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <h3 class="font-semibold text-[17px] mb-2">Boshqaruv murakkabligi</h3>
+        <p class="text-[14px] leading-relaxed" style="color:var(--gray)">O'nlab guruh, yuzlab talaba va turli fanlarni bir joyda kuzatib bo'lmaydi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="yechim" class="py-28" style="background:#FBFDFA" aria-labelledby="solution-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] mx-auto text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Yechim</span>
+      <h2 id="solution-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Yuklashdan tahlilgacha — yetti qadam, bitta oqim</h2>
+    </div>
+    <ol class="mt-16 timeline reveal in">
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">1</div><div><h3 class="font-semibold text-[14px]">Yuklash</h3><p class="text-[13px] mt-1" style="color:var(--gray)">PDF yoki savol banki</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">2</div><div><h3 class="font-semibold text-[14px]">AI generatsiya</h3><p class="text-[13px] mt-1" style="color:var(--gray)">Savollar avtomatik</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">3</div><div><h3 class="font-semibold text-[14px]">Tahrirlash</h3><p class="text-[13px] mt-1" style="color:var(--gray)">O'qituvchi tekshiradi</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">4</div><div><h3 class="font-semibold text-[14px]">Nashr etish</h3><p class="text-[13px] mt-1" style="color:var(--gray)">Bir tugma bilan</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">5</div><div><h3 class="font-semibold text-[14px]">Talaba qo'shiladi</h3><p class="text-[13px] mt-1" style="color:var(--gray)">Kod yoki havola orqali</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" aria-hidden="true">6</div><div><h3 class="font-semibold text-[14px]">Avtomatik baholash</h3><p class="text-[13px] mt-1" style="color:var(--gray)">Soniyalar ichida</p></div></li>
+      <li class="flex lg:flex-col items-start lg:items-center gap-4 lg:text-center flex-1"><div class="tl-node" style="background:var(--accent); color:var(--dark)" aria-hidden="true">7</div><div><h3 class="font-semibold text-[14px]">Tahlil</h3><p class="text-[13px] mt-1" style="color:var(--gray)">To'liq hisobot</p></div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="imkoniyatlar" class="py-28" aria-labelledby="features-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Imkoniyatlar</span>
+      <h2 id="features-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Har bir bosqich uchun kerakli vosita</h2>
+    </div>
+    <div class="mt-14 grid lg:grid-cols-3 gap-5">
+      <div class="bento bento-dark lg:col-span-2 p-9 reveal in">
+        <span class="tag" style="background:rgba(255,255,255,.1); color:var(--accent)">AI Savol Generatori</span>
+        <h3 class="mt-5 text-[26px] font-semibold display max-w-[420px]">PDF, Word, taqdimot yoki konspektdan savollar yarating</h3>
+        <p class="mt-3 text-[14px] max-w-[420px]" style="color:var(--gray-on-dark)">Materialni yuklang — Enwis mavzuni tushunib, turli qiyinlik darajasidagi savollarni bir necha soniyada tayyorlaydi.</p>
+        <div class="mt-8 flex flex-wrap gap-2">
+          <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark)">PDF</span>
+          <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark)">Word</span>
+          <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark)">PowerPoint</span>
+          <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark)">Darslik</span>
+          <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark)">Konspekt</span>
+        </div>
+      </div>
+      <div class="bento p-9 reveal reveal-d1 in">
+        <span class="tag">Savollar Banki</span>
+        <h3 class="mt-5 text-[20px] font-semibold display">Mavjud savollaringizni tartibga soling</h3>
+        <p class="mt-3 text-[14px]" style="color:var(--gray)">Excel'dan import qiling, kategoriya, qiyinlik va teg bo'yicha saralang, versiyalarni kuzating.</p>
+      </div>
+      <div class="bento p-9 reveal in">
+        <span class="tag">Imtihon Konstruktori</span>
+        <h3 class="mt-5 text-[20px] font-semibold display">Sudrab tashlash orqali vizual yaratish</h3>
+        <p class="mt-3 text-[14px]" style="color:var(--gray)">Bo'limlarni, vaqt chegarasini va savol tartibini bir necha daqiqada sozlang.</p>
+      </div>
+      <div class="bento p-9 reveal reveal-d1 in">
+        <span class="tag">Talaba Portali</span>
+        <h3 class="mt-5 text-[20px] font-semibold display">Kompyuter, planshet, telefon — farqsiz</h3>
+        <p class="mt-3 text-[14px]" style="color:var(--gray)">Talabalar istalgan qurilmadan, internetsiz uzilishlarga chidamli tarzda test topshiradi.</p>
+      </div>
+      <div class="bento p-9 reveal reveal-d2 in">
+        <span class="tag">Xavfsizlik</span>
+        <h3 class="mt-5 text-[20px] font-semibold display">Savol va javoblar aralashtiriladi</h3>
+        <p class="mt-3 text-[14px]" style="color:var(--gray)">Vaqt taymeri, qurilma aniqlash, ekrandan chetga chiqishni kuzatish, IP nazorati.</p>
+      </div>
+      <div class="bento lg:col-span-2 p-9 reveal reveal-d2 in" style="background:linear-gradient(135deg,#F7FAF6,#EFFCDB)">
+        <span class="tag" style="background:rgba(24,51,47,.08)">Avtomatik Baholash</span>
+        <div class="mt-5 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div>
+            <h3 class="text-[24px] font-semibold display max-w-[380px]" style="color:var(--dark)">Natijalar bir zumda, insholar ham ko'rib chiqiladi</h3>
+            <p class="mt-3 text-[14px] max-w-[380px]" style="color:var(--gray)">Yopiq turdagi savollar avtomatik, ochiq javoblar va insholar uchun AI qoralama baho beradi — o'qituvchi faqat tasdiqlaydi.</p>
+          </div>
+          <div class="stat-num shrink-0" style="color:var(--dark)">0.4<span class="text-[16px] font-normal" style="color:var(--gray)">soniyada</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE DEMO -->
+<section id="demo" class="py-28" style="background:#FBFDFA" aria-labelledby="demo-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] mx-auto text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Interaktiv demo</span>
+      <h2 id="demo-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Butun jarayonni o'zingiz sinab ko'ring</h2>
+      <p class="mt-4 text-[15px]" style="color:var(--gray)">Har bir bosqichni bosing — Enwis qanday ishlashini jonli ko'ring.</p>
+    </div>
+
+    <div class="mt-12 reveal reveal-d1 in">
+      <div class="flex flex-wrap justify-center gap-2" role="tablist" aria-label="Demo bosqichlari" id="demoTabs">
+        <button class="demo-tab" role="tab" aria-selected="true" aria-controls="demo-panel-1" id="demo-tab-1" data-step="1">1. Yuklash</button>
+        <button class="demo-tab" role="tab" aria-selected="false" aria-controls="demo-panel-2" id="demo-tab-2" data-step="2">2. AI generatsiya</button>
+        <button class="demo-tab" role="tab" aria-selected="false" aria-controls="demo-panel-3" id="demo-tab-3" data-step="3">3. Ko'rib chiqish</button>
+        <button class="demo-tab" role="tab" aria-selected="false" aria-controls="demo-panel-4" id="demo-tab-4" data-step="4">4. Nashr etish</button>
+        <button class="demo-tab" role="tab" aria-selected="false" aria-controls="demo-panel-5" id="demo-tab-5" data-step="5">5. Talabalar</button>
+        <button class="demo-tab" role="tab" aria-selected="false" aria-controls="demo-panel-6" id="demo-tab-6" data-step="6">6. Natijalar</button>
+      </div>
+
+      <div class="mt-8 max-w-[720px] mx-auto">
+        <div class="demo-panel active" role="tabpanel" id="demo-panel-1" aria-labelledby="demo-tab-1">
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:#fff; border:1px solid var(--line)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15l3-3 3 3"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">PDF, Word yoki mavjud savollar bankini yuklang</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Darslik, konspekt yoki Excel formatidagi savollar — barchasini bir joyga tashlash kifoya.</p>
+              <div class="mt-4 flex gap-2 flex-wrap">
+                <span class="tag">matematika_9sinf.pdf</span>
+                <span class="tag">savollar_banki.xlsx</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-panel" role="tabpanel" id="demo-panel-2" aria-labelledby="demo-tab-2" hidden>
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:var(--dark)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8" aria-hidden="true"><path d="M12 2l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">AI 40 ta savol taklif qiladi</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Turli qiyinlik darajasida, mavzuga mos savollar bir necha soniyada tayyor bo'ladi.</p>
+              <div class="mt-4 flex gap-2 flex-wrap">
+                <span class="tag">Oson &middot; 12 ta</span>
+                <span class="tag">O'rta &middot; 18 ta</span>
+                <span class="tag">Qiyin &middot; 10 ta</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-panel" role="tabpanel" id="demo-panel-3" aria-labelledby="demo-tab-3" hidden>
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:#fff; border:1px solid var(--line)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="1.8" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">O'qituvchi savollarni tahrirlaydi va tasdiqlaydi</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Har bir savolni tahrirlash, o'chirish yoki qiyinlik darajasini o'zgartirish mumkin — nazorat doim sizda.</p>
+            </div>
+          </div>
+        </div>
+        <div class="demo-panel" role="tabpanel" id="demo-panel-4" aria-labelledby="demo-tab-4" hidden>
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:#fff; border:1px solid var(--line)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">Bir tugma bilan nashr eting</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Vaqt chegarasi, savol tartibi va qamrov guruhlarini belgilab, imtihonni faollashtiring.</p>
+            </div>
+          </div>
+        </div>
+        <div class="demo-panel" role="tabpanel" id="demo-panel-5" aria-labelledby="demo-tab-5" hidden>
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:#fff; border:1px solid var(--line)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="1.8" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">Talabalar kod yoki havola orqali qo'shiladi</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Kompyuter, planshet yoki telefondan — ro'yxatdan o'tish shart emas, faqat imtihon kodi kifoya.</p>
+              <p class="mt-4 mono text-[13px] px-3 py-1.5 rounded-full inline-block" style="background:var(--dark); color:var(--accent)">Kod: MATH-2847</p>
+            </div>
+          </div>
+        </div>
+        <div class="demo-panel" role="tabpanel" id="demo-panel-6" aria-labelledby="demo-tab-6" hidden>
+          <div class="demo-step-visual flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style="background:#fff; border:1px solid var(--line)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="1.8" aria-hidden="true"><path d="M3 3v18h18M18 17V9M13 17V5M8 17v-3"/></svg></div>
+            <div>
+              <h3 class="font-semibold text-[17px]">Natijalar va tahlil bir zumda tayyor</h3>
+              <p class="text-[14px] mt-1" style="color:var(--gray)">Har bir talaba bahosi, o'rtacha natija va zaif mavzular — hammasi hisobot sifatida.</p>
+              <div class="mt-4 stat-num" style="font-size:1.8rem; color:var(--dark)">87<span class="text-[16px]">% o'rtacha ball</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD SHOWCASE -->
+<section id="dashboard" class="py-28" style="background:var(--dark); color:#fff" aria-labelledby="dashboard-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] mx-auto text-center reveal in">
+      <span class="eyebrow" style="background:var(--border-dark); border-color:rgba(255,255,255,.12); color:#fff"><span class="dot" style="background:var(--gray-on-dark)" aria-hidden="true"></span> Boshqaruv paneli</span>
+      <h2 id="dashboard-heading" class="mt-6 font-bold leading-tight" style="font-size:var(--fs-h2)">Butun muassasangiz — bitta ekranda</h2>
+      <p class="mt-4 text-[15px]" style="color:var(--gray-on-dark)">Imtihonlar, savollar banki, talabalar va hisobotlar — hammasi real vaqtda yangilanadi.</p>
+    </div>
+
+    <div class="mt-14 reveal reveal-d2 in">
+      <div class="rounded-[24px] overflow-hidden" style="border:1px solid var(--border-dark); background:var(--dark-2); box-shadow:0 40px 90px -30px rgba(0,0,0,.5)">
+        <div class="grid lg:grid-cols-[220px_1fr]">
+          <aside class="p-5 hidden lg:block" style="border-right:1px solid var(--border-dark)" aria-label="Boshqaruv paneli navigatsiyasi">
+            <div class="flex items-center gap-2 px-2 mb-6">
+              <svg width="22" height="22" viewBox="0 0 512 512" fill="none" aria-hidden="true"><rect x="150" y="60" width="220" height="90" rx="45" fill="#A8F62D"/><rect x="150" y="211" width="150" height="90" rx="45" fill="#A8F62D"/><rect x="150" y="362" width="220" height="90" rx="45" fill="#A8F62D"/></svg>
+              <span class="display font-bold text-[15px]">enwis</span>
+            </div>
+            <nav class="space-y-1">
+              <div class="dash-sidebar-item active">Bosh sahifa</div>
+              <div class="dash-sidebar-item">Imtihonlar</div>
+              <div class="dash-sidebar-item">Savollar banki</div>
+              <div class="dash-sidebar-item">Talabalar</div>
+              <div class="dash-sidebar-item">Hisobotlar</div>
+              <div class="dash-sidebar-item">Sozlamalar</div>
+            </nav>
+          </aside>
+          <div class="p-6 lg:p-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div><h3 class="font-semibold text-[16px]">Xush kelibsiz, Dilnoza</h3><p class="text-[13px]" style="color:var(--gray-on-dark)">Bugun 3 ta imtihon faol holatda</p></div>
+              <span class="text-[12px] px-3 py-1.5 rounded-full" style="background:var(--border-dark); color:var(--gray-on-dark)">14-iyul, dushanba</span>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4 mb-6">
+              <div class="dash-stat-card"><p class="text-[12px]" style="color:var(--gray-on-dark)">Faol imtihonlar</p><p class="stat-num mt-1" style="font-size:1.9rem; color:var(--accent)">3</p></div>
+              <div class="dash-stat-card"><p class="text-[12px]" style="color:var(--gray-on-dark)">Jami talabalar</p><p class="stat-num mt-1" style="font-size:1.9rem">1,284</p></div>
+              <div class="dash-stat-card"><p class="text-[12px]" style="color:var(--gray-on-dark)">O'rtacha ball</p><p class="stat-num mt-1" style="font-size:1.9rem">82%</p></div>
+            </div>
+            <div class="grid lg:grid-cols-[1fr_260px] gap-4">
+              <div class="dash-stat-card overflow-x-auto">
+                <p class="text-[13px] font-semibold mb-3">So'nggi imtihonlar</p>
+                <table class="w-full dash-table" style="min-width:420px">
+                  <thead><tr><th>Fan</th><th>Guruh</th><th>Holat</th><th>Sana</th></tr></thead>
+                  <tbody>
+                    <tr><td>Matematika</td><td>19-M</td><td><span class="status-pill" style="background:rgba(168,246,45,.15); color:var(--accent)">Faol</span></td><td style="color:var(--gray-on-dark)">14 iyul</td></tr>
+                    <tr><td>Ingliz tili</td><td>21-A</td><td><span class="status-pill" style="background:var(--border-dark); color:var(--gray-on-dark)">Tugagan</span></td><td style="color:var(--gray-on-dark)">12 iyul</td></tr>
+                    <tr><td>Fizika</td><td>19-M</td><td><span class="status-pill" style="background:var(--border-dark); color:var(--gray-on-dark)">Rejalashtirilgan</span></td><td style="color:var(--gray-on-dark)">18 iyul</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="dash-stat-card">
+                <p class="text-[13px] font-semibold mb-3">Bildirishnomalar</p>
+                <ul class="space-y-3 text-[12.5px]" style="color:var(--gray-on-dark)">
+                  <li class="flex gap-2"><span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style="background:var(--accent)" aria-hidden="true"></span>214 talaba imtihonni yakunladi</li>
+                  <li class="flex gap-2"><span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style="background:var(--gray-on-dark)" aria-hidden="true"></span>3 ta insho tekshiruv kutmoqda</li>
+                  <li class="flex gap-2"><span class="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style="background:var(--danger)" aria-hidden="true"></span>1 ta shubhali harakat qayd etildi</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STUDENT EXPERIENCE -->
+<section id="student-experience" class="py-28" aria-labelledby="student-heading">
+  <div class="container-x">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div class="reveal in order-2 lg:order-1">
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Talaba tajribasi</span>
+        <h2 id="student-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Har qanday qurilmada, xavotirsiz imtihon</h2>
+        <p class="mt-5 leading-relaxed" style="color:var(--gray); font-size:var(--fs-body-lg)">Katta, aniq tugmalar, tushunarli progres va aniq vaqt hisoblagichi — talaba faqat savolga e'tibor qaratadi.</p>
+        <ul class="mt-8 space-y-4 text-[14px]">
+          <li class="flex gap-3 items-start"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span><span>Savollar orasida erkin harakatlanish, keyinroq qaytish imkoniyati</span></li>
+          <li class="flex gap-3 items-start"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span><span>Internet uzilsa ham javoblar saqlanib qoladi</span></li>
+          <li class="flex gap-3 items-start"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span><span>Natija va to'g'ri javoblar tahlili darhol ko'rsatiladi</span></li>
+        </ul>
+      </div>
+      <div class="reveal reveal-d2 in order-1 lg:order-2">
+        <div class="phone-frame">
+          <div class="phone-notch" aria-hidden="true"></div>
+          <div class="phone-screen">
+            <div class="px-5 pt-7 pb-4" style="border-bottom:1px solid var(--line)">
+              <div class="flex items-center justify-between">
+                <span class="text-[12px] font-semibold" style="color:var(--gray)">Ingliz tili &middot; 12/20</span>
+                <span class="mono text-[12px] px-2.5 py-1 rounded-full" style="background:var(--dark); color:var(--accent)">14:02</span>
+              </div>
+              <div class="mt-3 h-1.5 rounded-full" style="background:var(--line)"><div class="h-1.5 rounded-full" style="width:60%; background:var(--dark)"></div></div>
+            </div>
+            <div class="p-5 flex-1">
+              <p class="text-[14px] font-medium leading-relaxed mb-4">Which sentence uses the present perfect tense correctly?</p>
+              <div class="space-y-2">
+                <div class="option-row selected"><span class="check" aria-hidden="true"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>She has visited Paris twice.</div>
+                <div class="option-row">She visit Paris twice.</div>
+                <div class="option-row">She visiting Paris twice.</div>
+                <div class="option-row">She will visited Paris twice.</div>
+              </div>
+            </div>
+            <div class="p-5 pt-0">
+              <button class="btn-primary w-full justify-center"><span>Keyingi savol</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-28" style="background:var(--dark); color:#fff" aria-labelledby="analytics-heading">
+  <div class="container-x">
+    <div class="grid lg:grid-cols-2 gap-16 items-center">
+      <div class="reveal in">
+        <span class="eyebrow" style="background:var(--border-dark); border-color:rgba(255,255,255,.12); color:var(--accent-2)"><span class="dot" style="background:var(--accent-2)" aria-hidden="true"></span> Tahlil</span>
+        <h2 id="analytics-heading" class="mt-6 font-bold leading-tight" style="font-size:var(--fs-h2)">Har bir imtihondan aniq xulosa chiqaring</h2>
+        <p class="mt-5 leading-relaxed" style="color:var(--gray-on-dark); font-size:var(--fs-body-lg)">O'rtacha ball, o'tish foizi, mavzular bo'yicha zaif nuqtalar va savol qiyinligi — barchasi jonli grafiklarda. Har bir talaba, har bir guruh, har bir fan bo'yicha ajratib ko'ring.</p>
+        <dl class="mt-10 grid grid-cols-2 gap-8">
+          <div><dt class="sr-only">O'rtacha o'tish darajasi</dt><dd class="stat-num counter" data-target="94" style="color:var(--accent)">0<span class="text-[20px]">%</span></dd><p class="text-[13px] mt-1" style="color:var(--gray-on-dark)">o'rtacha o'tish darajasi</p></div>
+          <div><dt class="sr-only">Tekshirilgan imtihonlar soni</dt><dd class="stat-num counter" data-target="120" style="color:var(--accent)">0<span class="text-[20px]">k+</span></dd><p class="text-[13px] mt-1" style="color:var(--gray-on-dark)">tekshirilgan imtihon</p></div>
+          <div><dt class="sr-only">Ta'lim muassasalari soni</dt><dd class="stat-num counter" data-target="850" style="color:var(--accent)">0<span class="text-[20px]">+</span></dd><p class="text-[13px] mt-1" style="color:var(--gray-on-dark)">ta'lim muassasasi</p></div>
+          <div><dt class="sr-only">Tizim ishlash vaqti</dt><dd class="stat-num counter" data-target="99" style="color:var(--accent)">0<span class="text-[20px]">.9%</span></dd><p class="text-[13px] mt-1" style="color:var(--gray-on-dark)">tizim ishlash vaqti</p></div>
+        </dl>
+      </div>
+      <div class="reveal reveal-d2 in">
+        <div class="rounded-2xl p-7" style="background:var(--dark-2); border:1px solid var(--border-dark)" role="img" aria-label="Fanlar bo'yicha samaradorlik: Matematika 91%, Ingliz tili 84%, Fizika 67%, Tarix 78%">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-semibold text-[15px]">Fan bo'yicha samaradorlik</h3>
+            <span class="text-[12px] px-3 py-1 rounded-full" style="background:var(--border-dark); color:var(--gray-on-dark)">So'nggi 30 kun</span>
+          </div>
+          <div class="space-y-4" aria-hidden="true">
+            <div><div class="flex justify-between text-[13px] mb-1.5"><span>Matematika</span><span style="color:var(--accent)">91%</span></div><div class="h-2 rounded-full" style="background:var(--border-dark)"><div class="h-2 rounded-full" style="width:91%; background:var(--accent)"></div></div></div>
+            <div><div class="flex justify-between text-[13px] mb-1.5"><span>Ingliz tili</span><span style="color:var(--accent-2)">84%</span></div><div class="h-2 rounded-full" style="background:var(--border-dark)"><div class="h-2 rounded-full" style="width:84%; background:var(--accent-2)"></div></div></div>
+            <div><div class="flex justify-between text-[13px] mb-1.5"><span>Fizika</span><span style="color:var(--gray-on-dark)">67%</span></div><div class="h-2 rounded-full" style="background:var(--border-dark)"><div class="h-2 rounded-full" style="width:67%; background:var(--gray-on-dark-mute)"></div></div></div>
+            <div><div class="flex justify-between text-[13px] mb-1.5"><span>Tarix</span><span style="color:var(--gray-on-dark)">78%</span></div><div class="h-2 rounded-full" style="background:var(--border-dark)"><div class="h-2 rounded-full" style="width:78%; background:var(--gray-on-dark-mute)"></div></div></div>
+          </div>
+          <div class="mt-6 pt-6 flex items-center justify-between" style="border-top:1px solid var(--border-dark)">
+            <span class="text-[13px]" style="color:var(--gray-on-dark)">Eng zaif mavzu</span>
+            <span class="text-[13px] font-medium">Fizika &middot; Termodinamika</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section id="xavfsizlik" class="py-28" aria-labelledby="security-heading">
+  <div class="container-x">
+    <div class="grid lg:grid-cols-[1fr_1.4fr] gap-14 items-start">
+      <div class="reveal in lg:sticky lg:top-28">
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Xavfsizlik</span>
+        <h2 id="security-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Har bir imtihon adolatli o'tishiga kafolat</h2>
+        <p class="mt-5 leading-relaxed" style="color:var(--gray); font-size:var(--fs-body-lg)">Ko'chirib yozish va savol sizib chiqishining oldini olish uchun bir necha qatlamli himoya ishlaydi.</p>
+        <div class="mt-8 p-5 rounded-2xl" style="background:#F7FAF6; border:1px solid var(--line)">
+          <p class="stat-num" style="font-size:1.8rem; color:var(--dark)">180k<span class="text-[15px] font-normal" style="color:var(--gray)"> ta shubhali harakat</span></p>
+          <p class="text-[13px] mt-1" style="color:var(--gray)">so'nggi 12 oyda avtomatik aniqlandi va qayd etildi</p>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div class="problem-card reveal in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M8 21H3v-5M20 4L3 21"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">Savol va javob aralashtirish</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Har bir talaba uchun savollar va variantlar tasodifiy tartibda ko'rsatiladi.</p>
+        </div>
+        <div class="problem-card reveal reveal-d1 in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M12 8v4l3 3M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">Vaqt taymeri</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Umumiy va har bir bo'lim uchun alohida vaqt chegarasi belgilanadi.</p>
+        </div>
+        <div class="problem-card reveal reveal-d2 in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">Qurilma aniqlash</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Bir hisob bir vaqtda faqat bitta qurilmadan imtihon topshirishi mumkin.</p>
+        </div>
+        <div class="problem-card reveal in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">Ekrandan chetga chiqish kuzatuvi</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Boshqa oyna yoki ilovaga o'tish avtomatik qayd etiladi va o'qituvchiga bildiriladi.</p>
+        </div>
+        <div class="problem-card reveal reveal-d1 in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">IP nazorati</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Kutilmagan hudud yoki IP manzillardan kirish darhol belgilanadi.</p>
+        </div>
+        <div class="problem-card reveal reveal-d2 in">
+          <div class="icon-badge mb-5"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#18332F" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+          <h3 class="font-semibold text-[16px] mb-2">Audit jurnali</h3>
+          <p class="text-[14px] leading-relaxed" style="color:var(--gray)">Har bir harakat vaqt belgisi bilan saqlanadi — kerak bo'lsa qayta ko'rib chiqiladi.</p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-14 text-center text-[13px] reveal in" style="color:var(--gray)">Face ID orqali tasdiqlash — tez orada</p>
+  </div>
+</section>
+
+<section class="py-28" aria-labelledby="testimonials-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] mx-auto text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Fikrlar</span>
+      <h2 id="testimonials-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Ta'lim muassasalari Enwis haqida</h2>
+    </div>
+    <div class="mt-14 grid md:grid-cols-3 gap-5">
+      <figure class="quote-card reveal in">
+        <blockquote class="text-[15px] leading-relaxed">"Sessiya imtihonlarini tayyorlash 3 kundan 3 soatgacha qisqardi. Endi har bir fan bo'yicha zaif mavzularni aniq ko'ramiz."</blockquote>
+        <figcaption class="mt-6 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full" style="background:var(--accent)" aria-hidden="true"></div>
+          <div><p class="font-semibold text-[14px]">Dilnoza Karimova</p><p class="text-[12px]" style="color:var(--gray)">O'quv ishlari prorektori</p></div>
+        </figcaption>
+      </figure>
+      <figure class="quote-card reveal reveal-d1 in">
+        <blockquote class="text-[15px] leading-relaxed">"AI generatori materiallarimizdan chindan ham sifatli savollar tuzadi. Tahrirlash ozgina vaqt oladi, xolos."</blockquote>
+        <figcaption class="mt-6 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full" style="background:var(--accent-2)" aria-hidden="true"></div>
+          <div><p class="font-semibold text-[14px]">Jasur Rahimov</p><p class="text-[12px]" style="color:var(--gray)">Matematika o'qituvchisi</p></div>
+        </figcaption>
+      </figure>
+      <figure class="quote-card reveal reveal-d2 in">
+        <blockquote class="text-[15px] leading-relaxed">"Sertifikatlash imtihonlarida xavfsizlik biz uchun hal qiluvchi omil. Ekran nazorati va tasodifiy savollar ishonchni oshirdi."</blockquote>
+        <figcaption class="mt-6 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full" style="background:var(--dark)" aria-hidden="true"></div>
+          <div><p class="font-semibold text-[14px]">Nodira Yusupova</p><p class="text-[12px]" style="color:var(--gray)">Sertifikatlash markazi direktori</p></div>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="tariflar" class="py-28" style="background:#FBFDFA" aria-labelledby="pricing-heading">
+  <div class="container-x">
+    <div class="max-w-[640px] mx-auto text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Tariflar</span>
+      <h2 id="pricing-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Har bir jamoa hajmiga mos reja</h2>
+    </div>
+    <div class="mt-14 grid lg:grid-cols-4 gap-5">
+      <div class="price-card reveal in">
+        <h3 class="font-semibold text-[16px]">O'qituvchi</h3>
+        <p class="text-[13px] mt-1" style="color:var(--gray)">Yakka tartibdagi o'qituvchilar uchun</p>
+        <p class="mt-6 stat-num" style="font-size:2rem">Bepul</p>
+        <a href="/register?plan=teacher" class="btn-ghost w-full text-center block mt-6">Boshlash</a>
+        <ul class="mt-7 space-y-3 text-[13px]">
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>1 ta faol imtihon</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>50 talabagacha</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>AI savol generatori</li>
+        </ul>
+      </div>
+      <div class="price-card reveal reveal-d1 in">
+        <h3 class="font-semibold text-[16px]">Maktab</h3>
+        <p class="text-[13px] mt-1" style="color:var(--gray)">Bitta muassasa uchun</p>
+        <p class="mt-6"><span class="stat-num" style="font-size:2rem">690k</span><span class="text-[13px]" style="color:var(--gray)"> so'm/oy</span></p>
+        <a href="/register?plan=school" class="btn-ghost w-full text-center block mt-6">Sinov boshlash</a>
+        <ul class="mt-7 space-y-3 text-[13px]">
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Cheksiz imtihon</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>1000 talabagacha</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Bo'lim va sinf boshqaruvi</li>
+        </ul>
+      </div>
+      <div class="price-card highlight reveal reveal-d2 in">
+        <div class="flex items-center justify-between"><h3 class="font-semibold text-[16px]">Universitet</h3><span class="text-[11px] font-semibold px-2.5 py-1 rounded-full" style="background:var(--accent); color:var(--dark)">Mashhur</span></div>
+        <p class="text-[13px] mt-1" style="color:var(--gray-on-dark)">Ko'p fakultetli muassasalar uchun</p>
+        <p class="mt-6"><span class="stat-num" style="font-size:2rem">2.4M</span><span class="text-[13px]" style="color:var(--gray-on-dark)"> so'm/oy</span></p>
+        <a href="/register?plan=university" class="on-dark w-full text-center block mt-6 rounded-full py-3 font-semibold text-[14px]" style="background:var(--accent); color:var(--dark)">Sinov boshlash</a>
+        <ul class="mt-7 space-y-3 text-[13px]">
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Cheksiz fakultet va guruh</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Insho baholash (AI)</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>REST API va webhook</li>
+        </ul>
+      </div>
+      <div class="price-card reveal reveal-d3 in">
+        <h3 class="font-semibold text-[16px]">Korporativ</h3>
+        <p class="text-[13px] mt-1" style="color:var(--gray)">Davlat va yirik tashkilotlar uchun</p>
+        <p class="mt-6 stat-num" style="font-size:2rem">Individual</p>
+        <a href="/contact" class="btn-ghost w-full text-center block mt-6">Bog'lanish</a>
+        <ul class="mt-7 space-y-3 text-[13px]">
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>SSO va maxsus xavfsizlik</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Alohida server</li>
+          <li class="flex gap-2 items-center"><span class="check" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>Shaxsiy mijozlar menejeri</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="savollar" class="py-28" aria-labelledby="faq-heading">
+  <div class="container-x max-w-[760px]">
+    <div class="text-center reveal in">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Savollar</span>
+      <h2 id="faq-heading" class="mt-6 font-bold leading-tight" style="color:var(--dark); font-size:var(--fs-h2)">Ko'p beriladigan savollar</h2>
+    </div>
+    <div class="mt-14 reveal in">
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-1" id="faq-q-1">AI yordamisiz platformadan foydalanish mumkinmi?<span class="faq-icon" aria-hidden="true">+</span></button>
+        <div class="faq-a text-[14px]" id="faq-a-1" role="region" aria-labelledby="faq-q-1" style="color:var(--gray)">Ha. Enwis AI'siz ham to'liq ishlaydi — mavjud savollar bankingizni yuklab, imtihonlarni odatdagidek tuzishingiz mumkin. AI faqat qo'shimcha, tezlashtiruvchi vosita.</div>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-2" id="faq-q-2">Talabalar qanday qurilmalardan foydalana oladi?<span class="faq-icon" aria-hidden="true">+</span></button>
+        <div class="faq-a text-[14px]" id="faq-a-2" role="region" aria-labelledby="faq-q-2" style="color:var(--gray)">Kompyuter, planshet va telefon — barchasi qo'llab-quvvatlanadi. Interfeys har qanday ekran o'lchamiga moslashadi.</div>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-3" id="faq-q-3">Ko'chirib yozishning oldi qanday olinadi?<span class="faq-icon" aria-hidden="true">+</span></button>
+        <div class="faq-a text-[14px]" id="faq-a-3" role="region" aria-labelledby="faq-q-3" style="color:var(--gray)">Savol va javoblar tasodifiy tartibda ko'rsatiladi, vaqt taymeri, qurilma aniqlash, ekrandan chetga chiqishni kuzatish va IP nazorati mavjud.</div>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-4" id="faq-q-4">Boshqa tizimlar bilan integratsiya bormi?<span class="faq-icon" aria-hidden="true">+</span></button>
+        <div class="faq-a text-[14px]" id="faq-a-4" role="region" aria-labelledby="faq-q-4" style="color:var(--gray)">Ha, REST API va webhook orqali mavjud LMS va boshqaruv tizimlaringiz bilan bog'lash mumkin.</div>
+      </div>
+      <div class="faq-item" data-open="false">
+        <button class="faq-q" aria-expanded="false" aria-controls="faq-a-5" id="faq-q-5">Ma'lumotlarim qanday himoyalanadi?<span class="faq-icon" aria-hidden="true">+</span></button>
+        <div class="faq-a text-[14px]" id="faq-a-5" role="region" aria-labelledby="faq-q-5" style="color:var(--gray)">Barcha ma'lumotlar shifrlangan holda saqlanadi, korporativ reja uchun alohida server va SSO imkoniyati mavjud.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-28" aria-labelledby="cta-heading">
+  <div class="container-x">
+    <div class="rounded-[32px] p-14 lg:p-20 text-center relative overflow-hidden reveal in" style="background:var(--dark)">
+      <div class="glow" style="top:-200px; left:20%; opacity:.5;" aria-hidden="true"></div>
+      <div class="glow" style="bottom:-200px; right:10%; opacity:.4; background:radial-gradient(circle, rgba(200,255,82,.3), transparent 65%);" aria-hidden="true"></div>
+      <div class="relative">
+        <h2 id="cta-heading" class="font-bold text-white leading-tight" style="font-size:clamp(2rem,5vw,3.2rem)">Baholashni zamonaviylashtirishga tayyormisiz?</h2>
+        <p class="mt-5 max-w-[480px] mx-auto" style="color:var(--gray-on-dark); font-size:var(--fs-body-lg)">14 kunlik bepul sinov — kredit karta talab qilinmaydi.</p>
+        <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/register" class="on-dark rounded-full px-8 py-3.5 font-semibold text-[14px]" style="background:var(--accent); color:var(--dark)">Bepul boshlash</a>
+          <a href="/demo" class="on-dark rounded-full px-8 py-3.5 font-semibold text-[14px] border" style="border-color:rgba(255,255,255,.25); color:#fff">Demo so'rash</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="pt-20 pb-10 border-t" style="border-color:var(--line)">
+  <div class="container-x">
+    <div class="grid lg:grid-cols-5 gap-10">
+      <div class="lg:col-span-2">
+        <a href="/" class="flex items-center gap-2" aria-label="Enwis — bosh sahifa">
+          <svg width="26" height="26" viewBox="0 0 512 512" fill="none" aria-hidden="true">
+            <rect x="150" y="60" width="220" height="90" rx="45" fill="#A8F62D"/>
+            <rect x="150" y="211" width="150" height="90" rx="45" fill="#A8F62D"/>
+            <rect x="150" y="362" width="220" height="90" rx="45" fill="#A8F62D"/>
+          </svg>
+          <span class="display font-bold text-lg" style="color:var(--dark)">enwis</span>
+        </a>
+        <p class="mt-4 text-[14px] max-w-[280px]" style="color:var(--gray)">Universitetlar, maktablar va o'quv markazlari uchun zamonaviy baholash platformasi.</p>
+      </div>
+      <nav aria-label="Kompaniya">
+        <p class="font-semibold text-[13px] mb-4">Kompaniya</p>
+        <ul class="space-y-3 text-[14px]" style="color:var(--gray)">
+          <li><a href="/about" class="hover:text-black transition">Biz haqimizda</a></li>
+          <li><a href="/blog" class="hover:text-black transition">Blog</a></li>
+          <li><a href="/contact" class="hover:text-black transition">Aloqa</a></li>
+          <li><a href="/b2b" class="hover:text-black transition">B2B</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Mahsulot">
+        <p class="font-semibold text-[13px] mb-4">Mahsulot</p>
+        <ul class="space-y-3 text-[14px]" style="color:var(--gray)">
+          <li><a href="#imkoniyatlar" class="hover:text-black transition">Imkoniyatlar</a></li>
+          <li><a href="#tariflar" class="hover:text-black transition">Tariflar</a></li>
+          <li><a href="/demo" class="hover:text-black transition">Demo</a></li>
+          <li><a href="#savollar" class="hover:text-black transition">Savollar</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="Resurslar">
+        <p class="font-semibold text-[13px] mb-4">Resurslar</p>
+        <ul class="space-y-3 text-[14px]" style="color:var(--gray)">
+          <li><a href="/docs" class="hover:text-black transition">Hujjatlar</a></li>
+          <li><a href="/api" class="hover:text-black transition">API</a></li>
+          <li><a href="/privacy" class="hover:text-black transition">Maxfiylik siyosati</a></li>
+          <li><a href="/terms" class="hover:text-black transition">Foydalanish shartlari</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="mt-16 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[13px]" style="border-top:1px solid var(--line); color:var(--gray)">
+      <p>&copy; 2026 Enwis. Barcha huquqlar himoyalangan.</p>
+      <div class="flex gap-5">
+        <a href="#" class="hover:text-black transition">Telegram</a>
+        <a href="#" class="hover:text-black transition">LinkedIn</a>
+        <a href="#" class="hover:text-black transition">Instagram</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
+
+<script>
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // scroll reveal — unobserve after firing to avoid leaking observers
+  var revealIo = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('in'); revealIo.unobserve(e.target); }
+    });
+  }, {threshold:0.15});
+  document.querySelectorAll('.reveal').forEach(function(el){ revealIo.observe(el); });
+
+  // pause/resume decorative infinite animations when off-screen
+  var motionIo = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ e.target.classList.toggle('in-view', e.isIntersecting); e.target.classList.toggle('visible', e.isIntersecting); });
+  }, {threshold:0.1});
+  document.querySelectorAll('.scan-card, #heroVisual').forEach(function(el){ motionIo.observe(el); });
+
+  // counters — count once
+  var counterIo = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var el = e.target;
+      var target = parseInt(el.dataset.target,10);
+      var suffix = el.querySelector('span') ? el.querySelector('span').outerHTML : '';
+      if(prefersReduced){ el.innerHTML = target + suffix; counterIo.unobserve(el); return; }
+      var cur = 0;
+      var step = Math.max(1, Math.round(target/40));
+      var timer = setInterval(function(){
+        cur += step;
+        if(cur >= target){ cur = target; clearInterval(timer); }
+        el.innerHTML = cur + suffix;
+      }, 30);
+      counterIo.unobserve(el);
+    });
+  }, {threshold:0.4});
+  document.querySelectorAll('.counter').forEach(function(el){ counterIo.observe(el); });
+
+  // mobile menu — accessible toggle
+  var menuBtn = document.getElementById('menuBtn');
+  var mobileMenu = document.getElementById('mobileMenu');
+  menuBtn.addEventListener('click', function(){
+    var open = mobileMenu.getAttribute('data-open') === 'true';
+    mobileMenu.setAttribute('data-open', String(!open));
+    menuBtn.setAttribute('aria-expanded', String(!open));
+  });
+
+  // interactive demo — accessible tab switching
+  var demoTabs = document.querySelectorAll('.demo-tab');
+  demoTabs.forEach(function(tab){
+    tab.addEventListener('click', function(){
+      var step = tab.dataset.step;
+      demoTabs.forEach(function(t){ t.setAttribute('aria-selected', String(t === tab)); });
+      document.querySelectorAll('.demo-panel').forEach(function(panel){
+        var isTarget = panel.id === 'demo-panel-' + step;
+        panel.classList.toggle('active', isTarget);
+        if(isTarget){ panel.removeAttribute('hidden'); } else { panel.setAttribute('hidden',''); }
+      });
+    });
+  });
+
+  // faq accordion — accessible toggle
+  document.querySelectorAll('.faq-q').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var item = btn.closest('.faq-item');
+      var open = item.getAttribute('data-open') === 'true';
+      document.querySelectorAll('.faq-item').forEach(function(f){
+        f.setAttribute('data-open','false');
+        f.querySelector('.faq-q').setAttribute('aria-expanded','false');
+      });
+      if(!open){ item.setAttribute('data-open','true'); btn.setAttribute('aria-expanded','true'); }
+    });
+  });
+
+  // hero glow parallax — rAF-batched, disabled under reduced motion
+  if(!prefersReduced){
+    var heroGlow = document.getElementById('heroGlow');
+    var pendingX = 0, pendingY = 0, ticking = false;
+    document.addEventListener('mousemove', function(e){
+      pendingX = (e.clientX / window.innerWidth - 0.5) * 30;
+      pendingY = (e.clientY / window.innerHeight - 0.5) * 20;
+      if(!ticking){
+        window.requestAnimationFrame(function(){
+          heroGlow.style.transform = 'translate(calc(-50% + ' + pendingX + 'px), ' + pendingY + 'px)';
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+
+  // bento mouse glow — rAF-batched
+  var bentoTicking = false, bentoPending = null;
+  document.querySelectorAll('.bento').forEach(function(el){
+    el.addEventListener('mousemove', function(e){
+      var rect = el.getBoundingClientRect();
+      bentoPending = {el:el, x:(e.clientX-rect.left)+'px', y:(e.clientY-rect.top)+'px'};
+      if(!bentoTicking){
+        window.requestAnimationFrame(function(){
+          if(bentoPending){ bentoPending.el.style.setProperty('--mx', bentoPending.x); bentoPending.el.style.setProperty('--my', bentoPending.y); }
+          bentoTicking = false;
+        });
+        bentoTicking = true;
+      }
+    });
+  });
+</script>
+</body>
+</html>
